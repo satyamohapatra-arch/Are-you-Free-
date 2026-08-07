@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Beer, PartyPopper, X, Plus, RotateCcw, ChevronDown } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const DAY_SHORT = { Monday:"Mon", Tuesday:"Tue", Wednesday:"Wed", Thursday:"Thu", Friday:"Fri", Saturday:"Sat", Sunday:"Sun" };
@@ -438,6 +439,7 @@ export default function App() {
           100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
       `}</style>
+      <Analytics />
     </div>
   );
 }
