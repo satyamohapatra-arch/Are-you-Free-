@@ -1,0 +1,414 @@
+import { useState, useEffect } from "react";
+import { Beer, PartyPopper, X, Plus, RotateCcw, ChevronDown } from "lucide-react";
+
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const DAY_SHORT = { Monday:"Mon", Tuesday:"Tue", Wednesday:"Wed", Thursday:"Thu", Friday:"Fri", Saturday:"Sat", Sunday:"Sun" };
+
+const PERSON_COLORS = {
+  HR:   { fill: "#D4537E", soft: "#FBEAF0", text: "#72243E" },
+  BADS: { fill: "#1D9E75", soft: "#E1F5EE", text: "#085041" },
+  FIN:  { fill: "#7F77DD", soft: "#EEEDFE", text: "#3C3489" },
+  MAR:  { fill: "#D85A30", soft: "#FAECE7", text: "#712B13" }
+};
+
+const DEFAULT_BASE = {
+  HR: {
+    name: "Person 1", tag: "HR",
+    Monday: [["11:50 AM","4:50 PM"]],
+    Tuesday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
+    Wednesday: [["9:30 AM","1:50 PM"]],
+    Thursday: [["9:30 AM","1:50 PM"]],
+    Friday: [["11:50 AM","1:50 PM"]],
+    Saturday: [["9:30 AM","11:30 AM"]],
+    Sunday: []
+  },
+  BADS: {
+    name: "Person 2", tag: "BADS",
+    Monday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
+    Tuesday: [["11:50 AM","4:50 PM"]],
+    Wednesday: [],
+    Thursday: [["9:30 AM","1:50 PM"]],
+    Friday: [["9:30 AM","1:50 PM"]],
+    Saturday: [],
+    Sunday: []
+  },
+  FIN: {
+    name: "Person 3", tag: "FIN",
+    Monday: [["11:50 AM","1:50 PM"]],
+    Tuesday: [["11:50 AM","4:50 PM"]],
+    Wednesday: [],
+    Thursday: [["9:30 AM","1:50 PM"]],
+    Friday: [["9:30 AM","4:50 PM"]],
+    Saturday: [],
+    Sunday: []
+  },
+  MAR: {
+    name: "Person 4", tag: "MAR",
+    Monday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
+    Tuesday: [["11:50 AM","4:50 PM"]],
+    Wednesday: [],
+    Thursday: [["9:30 AM","1:50 PM"]],
+    Friday: [["9:30 AM","1:50 PM"]],
+    Saturday: [],
+    Sunday: []
+  }
+};
+
+function emptyOverrides() {
+  const o = {};
+  DAYS.forEach(d => (o[d] = {}));
+  return o;
+}
+
+function toMinutes(t) {
+  const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const ap = m[3].toUpperCase();
+  if (ap === "PM" && h !== 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return h * 60 + min;
+}
+
+const DAY_START = 9 * 60;
+const DAY_END = 21 * 60;
+
+const STORE_KEY = "squad-timetable-v2";
+
+export default function App() {
+  const [people, setPeople] = useState(DEFAULT_BASE);
+  const [overrides, setOverrides] = useState(emptyOverrides());
+  const [editingDay, setEditingDay] = useState(null);
+  const [editingPerson, setEditingPerson] = useState(null);
+  const [openDay, setOpenDay] = useState(null);
+  const [celebrate, setCelebrate] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const [newBlock, setNewBlock] = useState({ start: "", end: "" });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.people) setPeople(parsed.people);
+        if (parsed.overrides) setOverrides(parsed.overrides);
+      }
+    } catch (e) {}
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ people, overrides }));
+    } catch (e) {}
+  }, [people, overrides, loaded]);
+
+  const personIds = Object.keys(people);
+
+  function dayFree(day) {
+    return personIds.every(pid => overrides[day][pid] || people[pid][day].length === 0);
+  }
+
+  function toggleCancel(day, pid) {
+    setOverrides(prev => {
+      const next = { ...prev, [day]: { ...prev[day], [pid]: !prev[day][pid] } };
+      if (!prev[day][pid]) {
+        const willBeFree = personIds.every(id =>
+          id === pid ? true : next[day][id] || people[id][day].length === 0
+        );
+        if (willBeFree) {
+          setCelebrate(day);
+          setTimeout(() => setCelebrate(null), 2200);
+        }
+      }
+      return next;
+    });
+  }
+
+  function resetOverrides() {
+    setOverrides(emptyOverrides());
+  }
+
+  function removeBlock(pid, day, idx) {
+    setPeople(prev => {
+      const next = { ...prev };
+      next[pid] = { ...next[pid] };
+      next[pid][day] = next[pid][day].filter((_, i) => i !== idx);
+      return next;
+    });
+  }
+
+  function addBlock(pid, day) {
+    if (!newBlock.start || !newBlock.end) return;
+    setPeople(prev => {
+      const next = { ...prev };
+      next[pid] = { ...next[pid] };
+      next[pid][day] = [...next[pid][day], [newBlock.start, newBlock.end]];
+      return next;
+    });
+    setNewBlock({ start: "", end: "" });
+    setEditingDay(null);
+    setEditingPerson(null);
+  }
+
+  const weekendFree = ["Saturday", "Sunday"].map(d => ({ day: d, free: dayFree(d) }));
+  const anyWeekendFree = weekendFree.some(w => w.free);
+  const freeCount = DAYS.filter(d => dayFree(d)).length;
+
+  return (
+    <div style={{ padding: "0.5rem 0 1rem", maxWidth: 680 }}>
+
+      <div style={{
+        position: "relative",
+        borderRadius: 16,
+        padding: "1.75rem 1.75rem 1.5rem",
+        marginBottom: "1.5rem",
+        background: "linear-gradient(180deg, #FAEEDA 0%, #F4DCAE 100%)",
+        overflow: "hidden"
+      }}>
+        <div style={{
+          position: "absolute", top: -30, right: -20, width: 140, height: 140,
+          borderRadius: "50%", background: "rgba(255,255,255,0.25)"
+        }} />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{
+            width: 46, height: 46, borderRadius: 12, background: "#412402",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+          }}>
+            <Beer size={24} color="#FAEEDA" strokeWidth={1.75} />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontFamily: "var(--font-voice)", fontSize: 26, fontWeight: 500, color: "#412402" }}>
+              Are you free this weekend?
+            </h1>
+            <p style={{ margin: "2px 0 0", fontSize: 13, color: "#854F0B" }}>
+              Four schedules, one shared answer.
+            </p>
+          </div>
+        </div>
+
+        <div style={{
+          position: "relative", marginTop: "1.25rem", display: "flex", alignItems: "center", gap: 14,
+          background: "rgba(255,255,255,0.55)", borderRadius: 12, padding: "0.85rem 1rem"
+        }}>
+          {anyWeekendFree ? (
+            <PartyPopper size={22} color="#3B6D11" style={{ flexShrink: 0 }} />
+          ) : (
+            <Beer size={22} color="#854F0B" style={{ flexShrink: 0 }} />
+          )}
+          <span style={{ fontSize: 14, color: anyWeekendFree ? "#27500A" : "#633806", lineHeight: 1.5 }}>
+            {anyWeekendFree
+              ? <><b style={{ fontWeight: 500 }}>It's on.</b> {weekendFree.filter(w => w.free).map(w => w.day).join(" and ")} works for all four of you.</>
+              : "Weekend's not locked in yet — clear a class below to make it happen."}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, marginBottom: "1.75rem", overflowX: "auto", paddingBottom: 4 }}>
+        {personIds.map(pid => {
+          const c = PERSON_COLORS[pid];
+          return (
+            <div key={pid} style={{
+              flex: "1 1 0", minWidth: 130, background: c.soft, borderRadius: 12,
+              padding: "0.7rem 0.85rem", borderLeft: `3px solid ${c.fill}`
+            }}>
+              <p style={{ fontWeight: 500, fontSize: 14, margin: 0, color: c.text }}>{people[pid].name}</p>
+              <p style={{ fontSize: 12, margin: "1px 0 0", color: c.text, opacity: 0.7 }}>{people[pid].tag}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.85rem" }}>
+        <div>
+          <h2 style={{ margin: 0 }}>This week</h2>
+          <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--text-secondary)" }}>
+            {freeCount} of 7 days fully open
+          </p>
+        </div>
+        <button onClick={resetOverrides} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, padding: "6px 12px" }}>
+          <RotateCcw size={14} aria-hidden="true" />
+          Reset week
+        </button>
+      </div>
+
+      {DAYS.map(day => {
+        const free = dayFree(day);
+        const isOpen = openDay === day;
+        const isCelebrating = celebrate === day;
+        const isWeekend = day === "Saturday" || day === "Sunday";
+
+        return (
+          <div
+            key={day}
+            style={{
+              background: "var(--surface-2)",
+              border: isCelebrating ? "1.5px solid #639922" : "0.5px solid var(--border)",
+              borderRadius: 12,
+              marginBottom: 8,
+              overflow: "hidden",
+              boxShadow: isCelebrating ? "0 0 0 4px rgba(99,153,34,0.12)" : "none",
+              transform: isCelebrating ? "scale(1.012)" : "scale(1)",
+              transition: "transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease"
+            }}
+          >
+            <div
+              onClick={() => setOpenDay(isOpen ? null : day)}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "0.8rem 1.1rem", cursor: "pointer"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: free ? "#639922" : "#B4B2A9", flexShrink: 0
+                }} />
+                <span style={{ fontWeight: 500, fontSize: 15 }}>{day}</span>
+                {isWeekend && (
+                  <span style={{ fontSize: 10, color: "#854F0B", background: "#FAEEDA", padding: "2px 7px", borderRadius: 6 }}>
+                    weekend
+                  </span>
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {isCelebrating && <PartyPopper size={16} color="#3B6D11" style={{ animation: "popIn 0.5s ease" }} />}
+                <span style={{ fontSize: 13, color: free ? "#3B6D11" : "var(--text-secondary)" }}>
+                  {free ? "free all day" : "after 5 PM"}
+                </span>
+                <ChevronDown size={16} color="var(--text-muted)" style={{
+                  transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease"
+                }} />
+              </div>
+            </div>
+
+            {isOpen && (
+              <div style={{ padding: "0.25rem 1.1rem 1rem", borderTop: "0.5px solid var(--border)" }}>
+                {personIds.every(pid => people[pid][day].length === 0) && (
+                  <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: "0.75rem 0" }}>
+                    Nobody has class this day. Free all day by default.
+                  </p>
+                )}
+
+                {personIds.map(pid => {
+                  const blocks = people[pid][day];
+                  const cancelled = !!overrides[day][pid];
+                  const isAdding = editingDay === day && editingPerson === pid;
+                  const c = PERSON_COLORS[pid];
+
+                  return (
+                    <div key={pid} style={{ padding: "0.65rem 0", borderBottom: "0.5px dashed var(--border)" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.fill }} />
+                          <span style={{ fontSize: 13, fontWeight: 500 }}>{people[pid].name}</span>
+                        </div>
+                        {blocks.length > 0 && (
+                          <button
+                            onClick={() => toggleCancel(day, pid)}
+                            style={{
+                              fontSize: 12, padding: "4px 10px",
+                              background: cancelled ? "#639922" : "transparent",
+                              color: cancelled ? "#fff" : "var(--text-primary)",
+                              borderColor: cancelled ? "#639922" : undefined
+                            }}
+                          >
+                            {cancelled ? "cancelled" : "mark cancelled"}
+                          </button>
+                        )}
+                      </div>
+
+                      {blocks.length > 0 && (
+                        <div style={{
+                          position: "relative", height: 8, borderRadius: 4, background: "var(--surface-1)",
+                          marginBottom: 8, overflow: "hidden", opacity: cancelled ? 0.35 : 1
+                        }}>
+                          {blocks.map((b, i) => {
+                            const s = toMinutes(b[0]);
+                            const e = toMinutes(b[1]);
+                            if (s == null || e == null) return null;
+                            const left = ((s - DAY_START) / (DAY_END - DAY_START)) * 100;
+                            const width = ((e - s) / (DAY_END - DAY_START)) * 100;
+                            return (
+                              <div key={i} style={{
+                                position: "absolute", left: `${left}%`, width: `${width}%`,
+                                top: 0, bottom: 0, background: c.fill, borderRadius: 3
+                              }} />
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {blocks.length === 0 && (
+                          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>no fixed class</span>
+                        )}
+                        {blocks.map((b, i) => (
+                          <span key={i} style={{
+                            fontSize: 12, padding: "3px 8px", borderRadius: 6,
+                            background: cancelled ? "var(--surface-1)" : c.soft,
+                            color: cancelled ? "var(--text-muted)" : c.text,
+                            textDecoration: cancelled ? "line-through" : "none",
+                            display: "flex", alignItems: "center", gap: 4
+                          }}>
+                            {b[0]}–{b[1]}
+                            <X size={12} style={{ cursor: "pointer" }} onClick={() => removeBlock(pid, day, i)} aria-label="Remove class block" />
+                          </span>
+                        ))}
+
+                        {isAdding ? (
+                          <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            <input
+                              placeholder="9:30 AM"
+                              value={newBlock.start}
+                              onChange={e => setNewBlock(nb => ({ ...nb, start: e.target.value }))}
+                              style={{ width: 82, height: 26, fontSize: 12, padding: "0 6px" }}
+                            />
+                            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>to</span>
+                            <input
+                              placeholder="11:30 AM"
+                              value={newBlock.end}
+                              onChange={e => setNewBlock(nb => ({ ...nb, end: e.target.value }))}
+                              style={{ width: 82, height: 26, fontSize: 12, padding: "0 6px" }}
+                            />
+                            <button onClick={() => addBlock(pid, day)} style={{ fontSize: 12, padding: "4px 8px" }}>add</button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => { setEditingDay(day); setEditingPerson(pid); setNewBlock({ start: "", end: "" }); }}
+                            style={{ fontSize: 12, padding: "3px 8px", display: "flex", alignItems: "center", gap: 4 }}
+                          >
+                            <Plus size={12} aria-hidden="true" />
+                            class
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div style={{
+                  marginTop: 10, padding: "0.6rem 0.8rem", fontSize: 13, borderRadius: 8,
+                  background: free ? "#EAF3DE" : "var(--surface-1)",
+                  color: free ? "#27500A" : "var(--text-secondary)"
+                }}>
+                  {free ? "Everyone's free all day — plan whenever." : "Default window: after 5:00 PM, everyone's free by then."}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <style>{`
+        @keyframes popIn {
+          0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+          60% { transform: scale(1.2) rotate(8deg); opacity: 1; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
