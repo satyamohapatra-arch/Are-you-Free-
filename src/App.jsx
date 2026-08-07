@@ -424,18 +424,43 @@ export default function App() {
                         {blocks.length === 0 && (
                           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>no fixed class</span>
                         )}
-                        {blocks.map((b, i) => (
-                          <span key={i} style={{
-                            fontSize: 12, padding: "3px 8px", borderRadius: 6,
-                            background: cancelled ? "var(--surface-1)" : c.soft,
-                            color: cancelled ? "var(--text-muted)" : c.text,
-                            textDecoration: cancelled ? "line-through" : "none",
-                            display: "flex", alignItems: "center", gap: 4
-                          }}>
-                            {b[0]}–{b[1]}
-                            <X size={12} style={{ cursor: "pointer" }} onClick={() => removeBlock(pid, day, i)} aria-label="Remove class block" />
-                          </span>
-                        ))}
+                        {blocks.flatMap((b, i) => {
+                          const chips = [];
+
+                          if (b[0] === "11:50 AM" && b[1] === "4:50 PM") {
+                            chips.push(["11:50 AM","1:50 PM"]);
+                            chips.push(["2:50 PM","4:50 PM"]);
+                          } else {
+                            chips.push(b);
+                          }
+
+                          return chips.map((chip, j) => (
+                            <span
+                              key={`${i}-${j}`}
+                              style={{
+                                fontSize: 12,
+                                padding: "3px 8px",
+                                borderRadius: 6,
+                                background: cancelled ? "var(--surface-1)" : c.soft,
+                                color: cancelled ? "var(--text-muted)" : c.text,
+                                textDecoration: cancelled ? "line-through" : "none",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4
+                              }}
+                            >
+                              {chip[0]}–{chip[1]}
+                              {j === chips.length - 1 && (
+                                <X
+                                  size={12}
+                                  style={{ cursor: "pointer" }}
+                                  onClick={() => removeBlock(pid, day, i)}
+                                  aria-label="Remove class block"
+                                />
+                              )}
+                            </span>
+                          ));
+                        })}
 
                         {isAdding ? (
                           <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
