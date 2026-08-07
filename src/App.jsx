@@ -13,7 +13,7 @@ const PERSON_COLORS = {
 
 const DEFAULT_BASE = {
   HR: {
-    name: "Person 1", tag: "HR",
+    name: "Rashi", tag: "HR",
     Monday: [["11:50 AM","4:50 PM"]],
     Tuesday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
     Wednesday: [["9:30 AM","1:50 PM"]],
@@ -23,7 +23,7 @@ const DEFAULT_BASE = {
     Sunday: []
   },
   BADS: {
-    name: "Person 2", tag: "BADS",
+    name: "Satya", tag: "BADS",
     Monday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
     Tuesday: [["11:50 AM","4:50 PM"]],
     Wednesday: [],
@@ -33,7 +33,7 @@ const DEFAULT_BASE = {
     Sunday: []
   },
   FIN: {
-    name: "Person 3", tag: "FIN",
+    name: "Saurav", tag: "FIN",
     Monday: [["11:50 AM","1:50 PM"]],
     Tuesday: [["11:50 AM","4:50 PM"]],
     Wednesday: [],
@@ -43,7 +43,7 @@ const DEFAULT_BASE = {
     Sunday: []
   },
   MAR: {
-    name: "Person 4", tag: "MAR",
+    name: "Akshita", tag: "MAR",
     Monday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
     Tuesday: [["11:50 AM","4:50 PM"]],
     Wednesday: [],
