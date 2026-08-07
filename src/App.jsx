@@ -366,7 +366,33 @@ export default function App() {
 
                       {blocks.length > 0 && (
                         <div style={{ marginBottom: 8, opacity: cancelled ? 0.35 : 1 }}>
-                          <div style={{ position: "relative", height: 10, display: "flex", gap: 4 }}>
+
+                          {/* Time axis */}
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(3, 1fr) auto",
+                              fontSize: 10,
+                              color: "var(--text-muted)",
+                              marginBottom: 4,
+                              alignItems: "end"
+                            }}
+                          >
+                            <div style={{ textAlign: "left" }}>9:30 AM</div>
+                            <div style={{ textAlign: "center" }}>11:50 AM</div>
+                            <div style={{ textAlign: "center" }}>2:50 PM</div>
+                            <div style={{ width: 42, textAlign: "right" }}>5 PM</div>
+                          </div>
+
+                          {/* Timeline */}
+                          <div
+                            style={{
+                              position: "relative",
+                              height: 10,
+                              display: "flex",
+                              gap: 4
+                            }}
+                          >
                             {SLOTS.map((slot, i) => {
                               const busy = blocks.some(b => overlapsSlot(b, slot));
                               return (
@@ -381,26 +407,15 @@ export default function App() {
                                 />
                               );
                             })}
+
                             <div
                               style={{
-                                position: "absolute",
-                                left: `${((FIVE_PM - DAY_START) / (DAY_END - DAY_START)) * 100}%`,
-                                top: -3, bottom: -3, width: 0,
-                                borderLeft: "2px dashed var(--text-muted)"
+                                width: 2,
+                                background: "var(--text-muted)",
+                                opacity: 0.45,
+                                marginLeft: 2
                               }}
                             />
-                          </div>
-                          <div style={{ position: "relative", height: 12, marginTop: 2 }}>
-                            <span
-                              style={{
-                                position: "absolute",
-                                left: `${((FIVE_PM - DAY_START) / (DAY_END - DAY_START)) * 100}%`,
-                                transform: "translateX(-50%)",
-                                fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap"
-                              }}
-                            >
-                              5 PM
-                            </span>
                           </div>
                         </div>
                       )}
