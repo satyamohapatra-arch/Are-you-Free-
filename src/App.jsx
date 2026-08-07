@@ -81,39 +81,17 @@ const SLOTS = [
   { start: "2:50 PM", end: "4:50 PM" }
 ];
 
-
-function generateTimeOptions() {
-  const options = [];
-
-  for (let hour = 0; hour < 24; hour++) {
-    for (const minute of [0, 30]) {
-      const date = new Date();
-      date.setHours(hour, minute, 0, 0);
-
-      options.push(
-        date.toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-      );
-    }
-  }
-
-  // Include next day's midnight as the final option.
-  options.push("12:00 AM");
-
-  return options;
-}
-
-const TIME_OPTIONS = generateTimeOptions();
-
 function overlapsSlot(block, slot) {
   const bs = toMinutes(block[0]);
   const be = toMinutes(block[1]);
   const ss = toMinutes(slot.start);
   const se = toMinutes(slot.end);
   return bs < se && be > ss;
+}
+
+function blockToChips(block) {
+  const covered = SLOTS.filter(slot => overlapsSlot(block, slot));
+  return covered.length > 0 ? covered.map(s => [s.start, s.end]) : [block];
 }
 
 const STORE_KEY = "squad-timetable-v2";
@@ -172,6 +150,13 @@ export default function App() {
 
   function resetOverrides() {
     setOverrides(emptyOverrides());
+  }
+
+  function resetPersonDay(pid, day) {
+    setPeople(prev => ({
+      ...prev,
+      [pid]: { ...prev[pid], [day]: DEFAULT_BASE[pid][day] }
+    }));
   }
 
   function removeBlock(pid, day, idx) {
@@ -376,19 +361,31 @@ export default function App() {
                           <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.fill }} />
                           <span style={{ fontSize: 13, fontWeight: 500 }}>{people[pid].name}</span>
                         </div>
-                        {blocks.length > 0 && (
-                          <button
-                            onClick={() => toggleCancel(day, pid)}
-                            style={{
-                              fontSize: 12, padding: "4px 10px",
-                              background: cancelled ? "#639922" : "transparent",
-                              color: cancelled ? "#fff" : "var(--text-primary)",
-                              borderColor: cancelled ? "#639922" : undefined
-                            }}
-                          >
-                            {cancelled ? "cancelled" : "mark cancelled"}
-                          </button>
-                        )}
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {JSON.stringify(blocks) !== JSON.stringify(DEFAULT_BASE[pid][day]) && (
+                            <button
+                              onClick={() => resetPersonDay(pid, day)}
+                              title="Reset this day's class times to default"
+                              style={{ fontSize: 12, padding: "4px 8px", display: "flex", alignItems: "center", gap: 4 }}
+                            >
+                              <RotateCcw size={12} aria-hidden="true" />
+                              reset
+                            </button>
+                          )}
+                          {blocks.length > 0 && (
+                            <button
+                              onClick={() => toggleCancel(day, pid)}
+                              style={{
+                                fontSize: 12, padding: "4px 10px",
+                                background: cancelled ? "#639922" : "transparent",
+                                color: cancelled ? "#fff" : "var(--text-primary)",
+                                borderColor: cancelled ? "#639922" : undefined
+                              }}
+                            >
+                              {cancelled ? "cancelled" : "mark cancelled"}
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {blocks.length > 0 && (
@@ -452,14 +449,7 @@ export default function App() {
                           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>no fixed class</span>
                         )}
                         {blocks.flatMap((b, i) => {
-                          const chips = [];
-
-                          if (b[0] === "11:50 AM" && b[1] === "4:50 PM") {
-                            chips.push(["11:50 AM","1:50 PM"]);
-                            chips.push(["2:50 PM","4:50 PM"]);
-                          } else {
-                            chips.push(b);
-                          }
+                          const chips = blockToChips(b);
 
                           return chips.map((chip, j) => (
                             <span
@@ -492,28 +482,18 @@ export default function App() {
                         {isAdding ? (
                           <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
                             <select
-                              value={newBlock.start}
-                              onChange={e => setNewBlock(nb => ({ ...nb, start: e.target.value }))}
+                              value={newBlock.start && newBlock.end ? `${newBlock.start}|${newBlock.end}` : ""}
+                              onChange={e => {
+                                const [start, end] = e.target.value.split("|");
+                                setNewBlock({ start, end });
+                              }}
                               style={{ height: 30, fontSize: 12, borderRadius: 6, padding: "0 8px" }}
                             >
-                              <option value="">Start</option>
-                              {TIME_OPTIONS.map(time => (
-                                <option key={time} value={time}>{time}</option>
-                              ))}
-                            </select>
-
-                            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>to</span>
-
-                            <select
-                              value={newBlock.end}
-                              onChange={e => setNewBlock(nb => ({ ...nb, end: e.target.value }))}
-                              style={{ height: 30, fontSize: 12, borderRadius: 6, padding: "0 8px" }}
-                            >
-                              <option value="">End</option>
-                              {TIME_OPTIONS.filter(time =>
-                                !newBlock.start || toMinutes(time) > toMinutes(newBlock.start)
-                              ).map(time => (
-                                <option key={time} value={time}>{time}</option>
+                              <option value="">Select slot</option>
+                              {SLOTS.filter(slot => !blocks.some(b => overlapsSlot(b, slot))).map(slot => (
+                                <option key={slot.start} value={`${slot.start}|${slot.end}`}>
+                                  {slot.start}–{slot.end}
+                                </option>
                               ))}
                             </select>
 
