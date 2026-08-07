@@ -73,6 +73,21 @@ function toMinutes(t) {
 
 const DAY_START = 9 * 60;
 const DAY_END = 21 * 60;
+const FIVE_PM = 17 * 60;
+
+const SLOTS = [
+  { start: "9:30 AM", end: "11:30 AM" },
+  { start: "11:50 AM", end: "1:50 PM" },
+  { start: "2:50 PM", end: "4:50 PM" }
+];
+
+function overlapsSlot(block, slot) {
+  const bs = toMinutes(block[0]);
+  const be = toMinutes(block[1]);
+  const ss = toMinutes(slot.start);
+  const se = toMinutes(slot.end);
+  return bs < se && be > ss;
+}
 
 const STORE_KEY = "squad-timetable-v2";
 
@@ -350,23 +365,43 @@ export default function App() {
                       </div>
 
                       {blocks.length > 0 && (
-                        <div style={{
-                          position: "relative", height: 8, borderRadius: 4, background: "var(--surface-1)",
-                          marginBottom: 8, overflow: "hidden", opacity: cancelled ? 0.35 : 1
-                        }}>
-                          {blocks.map((b, i) => {
-                            const s = toMinutes(b[0]);
-                            const e = toMinutes(b[1]);
-                            if (s == null || e == null) return null;
-                            const left = ((s - DAY_START) / (DAY_END - DAY_START)) * 100;
-                            const width = ((e - s) / (DAY_END - DAY_START)) * 100;
-                            return (
-                              <div key={i} style={{
-                                position: "absolute", left: `${left}%`, width: `${width}%`,
-                                top: 0, bottom: 0, background: c.fill, borderRadius: 3
-                              }} />
-                            );
-                          })}
+                        <div style={{ marginBottom: 8, opacity: cancelled ? 0.35 : 1 }}>
+                          <div style={{ position: "relative", height: 10, display: "flex", gap: 4 }}>
+                            {SLOTS.map((slot, i) => {
+                              const busy = blocks.some(b => overlapsSlot(b, slot));
+                              return (
+                                <div
+                                  key={i}
+                                  style={{
+                                    flex: 1,
+                                    borderRadius: 4,
+                                    background: busy ? c.fill : "var(--surface-1)",
+                                    transition: "background 0.2s ease"
+                                  }}
+                                />
+                              );
+                            })}
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: `${((FIVE_PM - DAY_START) / (DAY_END - DAY_START)) * 100}%`,
+                                top: -3, bottom: -3, width: 0,
+                                borderLeft: "2px dashed var(--text-muted)"
+                              }}
+                            />
+                          </div>
+                          <div style={{ position: "relative", height: 12, marginTop: 2 }}>
+                            <span
+                              style={{
+                                position: "absolute",
+                                left: `${((FIVE_PM - DAY_START) / (DAY_END - DAY_START)) * 100}%`,
+                                transform: "translateX(-50%)",
+                                fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap"
+                              }}
+                            >
+                              5 PM
+                            </span>
+                          </div>
                         </div>
                       )}
 
