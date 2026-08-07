@@ -132,6 +132,27 @@ export default function App() {
     return personIds.every(pid => overrides[day][pid] || people[pid][day].length === 0);
   }
 
+  function freeAfterTime(day) {
+    let latestEnd = null;
+    personIds.forEach(pid => {
+      if (overrides[day][pid]) return;
+      people[pid][day].forEach(b => {
+        const end = toMinutes(b[1]);
+        if (latestEnd === null || end > latestEnd) latestEnd = end;
+      });
+    });
+    return latestEnd === null ? null : latestEnd;
+  }
+
+  function formatMinutes(mins) {
+    let h = Math.floor(mins / 60);
+    const m = mins % 60;
+    const ap = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${m.toString().padStart(2, "0")} ${ap}`;
+  }
+
   function toggleCancel(day, pid) {
     setOverrides(prev => {
       const next = { ...prev, [day]: { ...prev[day], [pid]: !prev[day][pid] } };
@@ -283,6 +304,7 @@ export default function App() {
 
       {DAYS.map(day => {
         const free = dayFree(day);
+        const freeMins = free ? null : freeAfterTime(day);
         const isOpen = openDay === day;
         const isCelebrating = celebrate === day;
         const isWeekend = day === "Saturday" || day === "Sunday";
