@@ -83,6 +83,7 @@ export default function App() {
   const [editingPerson, setEditingPerson] = useState(null);
   const [openDay, setOpenDay] = useState(null);
   const [celebrate, setCelebrate] = useState(null);
+  const [hoverDay, setHoverDay] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [newBlock, setNewBlock] = useState({ start: "", end: "" });
 
@@ -166,7 +167,8 @@ export default function App() {
         padding: "1.75rem 1.75rem 1.5rem",
         marginBottom: "1.5rem",
         background: "linear-gradient(180deg, #FAEEDA 0%, #F4DCAE 100%)",
-        overflow: "hidden"
+        overflow: "hidden",
+        boxShadow: "0 10px 28px rgba(65,36,2,0.14)"
       }}>
         <div style={{
           position: "absolute", top: -30, right: -20, width: 140, height: 140,
@@ -175,7 +177,8 @@ export default function App() {
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{
             width: 46, height: 46, borderRadius: 12, background: "#412402",
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            boxShadow: "0 4px 10px rgba(65,36,2,0.35)"
           }}>
             <Beer size={24} color="#FAEEDA" strokeWidth={1.75} />
           </div>
@@ -210,10 +213,24 @@ export default function App() {
         {personIds.map(pid => {
           const c = PERSON_COLORS[pid];
           return (
-            <div key={pid} style={{
-              flex: "1 1 0", minWidth: 130, background: c.soft, borderRadius: 12,
-              padding: "0.7rem 0.85rem", borderLeft: `3px solid ${c.fill}`
-            }}>
+            <div
+              key={pid}
+              style={{
+                flex: "1 1 0", minWidth: 130, background: c.soft, borderRadius: 12,
+                padding: "0.7rem 0.85rem", borderLeft: `3px solid ${c.fill}`,
+                boxShadow: "0 1px 3px rgba(27,27,31,0.06)",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                cursor: "default"
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 6px 14px rgba(27,27,31,0.12)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(27,27,31,0.06)";
+              }}
+            >
               <p style={{ fontWeight: 500, fontSize: 14, margin: 0, color: c.text }}>{people[pid].name}</p>
               <p style={{ fontSize: 12, margin: "1px 0 0", color: c.text, opacity: 0.7 }}>{people[pid].tag}</p>
             </div>
@@ -240,18 +257,27 @@ export default function App() {
         const isCelebrating = celebrate === day;
         const isWeekend = day === "Saturday" || day === "Sunday";
 
+        const isHovering = hoverDay === day;
+        const cardShadow = isCelebrating
+          ? "0 0 0 4px rgba(99,153,34,0.14), 0 10px 24px rgba(99,153,34,0.18)"
+          : isHovering
+          ? "0 8px 20px rgba(27,27,31,0.10)"
+          : "0 1px 3px rgba(27,27,31,0.06)";
+
         return (
           <div
             key={day}
+            onMouseEnter={() => setHoverDay(day)}
+            onMouseLeave={() => setHoverDay(prev => (prev === day ? null : prev))}
             style={{
               background: "var(--surface-2)",
               border: isCelebrating ? "1.5px solid #639922" : "0.5px solid var(--border)",
               borderRadius: 12,
               marginBottom: 8,
               overflow: "hidden",
-              boxShadow: isCelebrating ? "0 0 0 4px rgba(99,153,34,0.12)" : "none",
-              transform: isCelebrating ? "scale(1.012)" : "scale(1)",
-              transition: "transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease"
+              boxShadow: cardShadow,
+              transform: isCelebrating ? "scale(1.012)" : isHovering ? "translateY(-2px)" : "translateY(0)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.35s ease"
             }}
           >
             <div
