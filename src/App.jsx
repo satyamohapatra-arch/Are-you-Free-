@@ -44,7 +44,7 @@ const DEFAULT_BASE = {
   },
   MAR: {
     name: "Akshita", tag: "MAR",
-    Monday: [["9:30 AM","11:30 AM"],["11:50 AM","41:50 PM"]],
+    Monday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
     Tuesday: [["11:50 AM","1:50 PM"],["2:50 PM","4:50 PM"]],
     Wednesday: [],
     Thursday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
@@ -84,13 +84,11 @@ const SLOTS = [
 
 function generateTimeOptions() {
   const options = [];
-  for (let hour = 9; hour <= 21; hour++) {
-    for (const minute of [0, 30]) {
-      if (hour === 9 && minute === 0) continue;
-      if (hour === 21 && minute === 30) continue;
 
+  for (let hour = 0; hour < 24; hour++) {
+    for (const minute of [0, 30]) {
       const date = new Date();
-      date.setHours(hour, minute);
+      date.setHours(hour, minute, 0, 0);
 
       options.push(
         date.toLocaleTimeString("en-US", {
@@ -101,6 +99,10 @@ function generateTimeOptions() {
       );
     }
   }
+
+  // Include next day's midnight as the final option.
+  options.push("12:00 AM");
+
   return options;
 }
 
