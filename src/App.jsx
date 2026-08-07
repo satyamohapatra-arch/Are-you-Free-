@@ -81,6 +81,31 @@ const SLOTS = [
   { start: "2:50 PM", end: "4:50 PM" }
 ];
 
+
+function generateTimeOptions() {
+  const options = [];
+  for (let hour = 9; hour <= 21; hour++) {
+    for (const minute of [0, 30]) {
+      if (hour === 9 && minute === 0) continue;
+      if (hour === 21 && minute === 30) continue;
+
+      const date = new Date();
+      date.setHours(hour, minute);
+
+      options.push(
+        date.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })
+      );
+    }
+  }
+  return options;
+}
+
+const TIME_OPTIONS = generateTimeOptions();
+
 function overlapsSlot(block, slot) {
   const bs = toMinutes(block[0]);
   const be = toMinutes(block[1]);
@@ -464,19 +489,32 @@ export default function App() {
 
                         {isAdding ? (
                           <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                            <input
-                              placeholder="9:30 AM"
+                            <select
                               value={newBlock.start}
                               onChange={e => setNewBlock(nb => ({ ...nb, start: e.target.value }))}
-                              style={{ width: 82, height: 26, fontSize: 12, padding: "0 6px" }}
-                            />
+                              style={{ height: 30, fontSize: 12, borderRadius: 6, padding: "0 8px" }}
+                            >
+                              <option value="">Start</option>
+                              {TIME_OPTIONS.map(time => (
+                                <option key={time} value={time}>{time}</option>
+                              ))}
+                            </select>
+
                             <span style={{ fontSize: 12, color: "var(--text-muted)" }}>to</span>
-                            <input
-                              placeholder="11:30 AM"
+
+                            <select
                               value={newBlock.end}
                               onChange={e => setNewBlock(nb => ({ ...nb, end: e.target.value }))}
-                              style={{ width: 82, height: 26, fontSize: 12, padding: "0 6px" }}
-                            />
+                              style={{ height: 30, fontSize: 12, borderRadius: 6, padding: "0 8px" }}
+                            >
+                              <option value="">End</option>
+                              {TIME_OPTIONS.filter(time =>
+                                !newBlock.start || toMinutes(time) > toMinutes(newBlock.start)
+                              ).map(time => (
+                                <option key={time} value={time}>{time}</option>
+                              ))}
+                            </select>
+
                             <button onClick={() => addBlock(pid, day)} style={{ fontSize: 12, padding: "4px 8px" }}>add</button>
                           </span>
                         ) : (
