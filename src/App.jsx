@@ -209,14 +209,17 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginBottom: "1.75rem", overflowX: "auto", paddingBottom: 4 }}>
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+        gap: 10, marginBottom: "1.75rem"
+      }}>
         {personIds.map(pid => {
           const c = PERSON_COLORS[pid];
           return (
             <div
               key={pid}
               style={{
-                flex: "1 1 0", minWidth: 130, background: c.soft, borderRadius: 12,
+                background: c.soft, borderRadius: 12,
                 padding: "0.7rem 0.85rem", borderLeft: `3px solid ${c.fill}`,
                 boxShadow: "0 1px 3px rgba(27,27,31,0.06)",
                 transition: "transform 0.15s ease, box-shadow 0.15s ease",
