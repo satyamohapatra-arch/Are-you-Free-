@@ -14,10 +14,10 @@ const PERSON_COLORS = {
 const DEFAULT_BASE = {
   HR: {
     name: "Rashi", tag: "HR",
-    Monday: [["11:50 AM","4:50 PM"]],
+    Monday: [["11:50 AM","1:50 PM"],["2:50 PM","4:50 PM"]],
     Tuesday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
-    Wednesday: [["9:30 AM","1:50 PM"]],
-    Thursday: [["9:30 AM","1:50 PM"]],
+    Wednesday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
+    Thursday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
     Friday: [["11:50 AM","1:50 PM"]],
     Saturday: [["9:30 AM","11:30 AM"]],
     Sunday: []
@@ -25,19 +25,19 @@ const DEFAULT_BASE = {
   BADS: {
     name: "Satya", tag: "BADS",
     Monday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
-    Tuesday: [["11:50 AM","4:50 PM"]],
+    Tuesday: [["11:50 AM","1:50 PM"],["2:50 PM","4:50 PM"]],
     Wednesday: [],
-    Thursday: [["9:30 AM","1:50 PM"]],
-    Friday: [["9:30 AM","1:50 PM"]],
+    Thursday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
+    Friday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
     Saturday: [],
     Sunday: []
   },
   FIN: {
     name: "Saurav", tag: "FIN",
     Monday: [["11:50 AM","1:50 PM"]],
-    Tuesday: [["11:50 AM","4:50 PM"]],
+    Tuesday: [["11:50 AM","1:50 PM"],["2:50 PM","4:50 PM"]],
     Wednesday: [],
-    Thursday: [["9:30 AM","1:50 PM"]],
+    Thursday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
     Friday: [["9:30 AM","4:50 PM"]],
     Saturday: [],
     Sunday: []
@@ -45,10 +45,10 @@ const DEFAULT_BASE = {
   MAR: {
     name: "Akshita", tag: "MAR",
     Monday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
-    Tuesday: [["11:50 AM","4:50 PM"]],
+    Tuesday: [["11:50 AM","1:50 PM"],["2:50 PM","4:50 PM"]],
     Wednesday: [],
-    Thursday: [["9:30 AM","1:50 PM"]],
-    Friday: [["9:30 AM","1:50 PM"]],
+    Thursday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
+    Friday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
     Saturday: [],
     Sunday: []
   }
