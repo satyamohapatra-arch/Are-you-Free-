@@ -44,7 +44,7 @@ const DEFAULT_BASE = {
   },
   MAR: {
     name: "Akshita", tag: "MAR",
-    Monday: [["9:30 AM","11:30 AM"],["2:50 PM","4:50 PM"]],
+    Monday: [["9:30 AM","11:30 AM"],["11:50 AM","41:50 PM"]],
     Tuesday: [["11:50 AM","1:50 PM"],["2:50 PM","4:50 PM"]],
     Wednesday: [],
     Thursday: [["9:30 AM","11:30 AM"],["11:50 AM","1:50 PM"]],
